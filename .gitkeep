@@ -1,0 +1,8 @@
+touch scripts/.gitkeep
+touch results/charts/.gitkeep
+touch results/confusion_matrices/.gitkeep
+touch results/metrics/.gitkeep
+touch notebooks/.gitkeep
+touch presentation/.gitkeep
+touch report/.gitkeep
+touch data/processed/.gitkeep
