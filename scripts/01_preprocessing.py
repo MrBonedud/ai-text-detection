@@ -1,9 +1,11 @@
 import pandas as pd
 import re
 import nltk
+import argparse
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from nltk.stem import PorterStemmer
 import os
 
 # Download required NLTK data
@@ -11,6 +13,10 @@ try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt')
+try:
+    nltk.data.find('tokenizers/punkt_tab/english')
+except LookupError:
+    nltk.download('punkt_tab')
 
 try:
     nltk.data.find('corpora/stopwords')
@@ -21,12 +27,17 @@ try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
     nltk.download('wordnet')
+try:
+    nltk.data.find('corpora/omw-1.4')
+except LookupError:
+    nltk.download('omw-1.4')
 
 # Initialize
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
+stemmer = PorterStemmer()
 
-def clean_text(text):
+def clean_text(text, use_stemmer=False):
     """
     Clean and preprocess text:
     1. Convert to lowercase
@@ -53,9 +64,12 @@ def clean_text(text):
     
     # Tokenize
     tokens = word_tokenize(text)
-    
-    # Remove stopwords and lemmatize
-    tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words and len(token) > 1]
+
+    # Remove stopwords, lemmatize (and optionally stem)
+    if use_stemmer:
+        tokens = [stemmer.stem(lemmatizer.lemmatize(token)) for token in tokens if token not in stop_words and len(token) > 1]
+    else:
+        tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words and len(token) > 1]
     
     # Rejoin
     cleaned = ' '.join(tokens)
@@ -63,8 +77,18 @@ def clean_text(text):
     return cleaned
 
 def main():
-    input_path = 'data/processed/raw_data.csv'
-    output_path = 'data/processed/clean_data.csv'
+    parser = argparse.ArgumentParser(description='Preprocess raw text CSV')
+    parser.add_argument('--input', '-i', default=os.path.join('data', 'processed', 'raw_data.csv'), help='Input CSV path')
+    parser.add_argument('--output', '-o', default=os.path.join('data', 'processed', 'clean_data.csv'), help='Output CSV path')
+    parser.add_argument('--use-stemmer', action='store_true', help='Apply Porter stemming after lemmatization')
+    args = parser.parse_args()
+
+    input_path = args.input
+    output_path = args.output
+
+    # Ensure output directory exists
+    output_dir = os.path.dirname(output_path) or '.'
+    os.makedirs(output_dir, exist_ok=True)
     
     print("── Loading dataset ──")
     df = pd.read_csv(input_path)
@@ -75,12 +99,20 @@ def main():
     # Store originals for before/after comparison
     before_samples = df['text'].head(3).copy()
     
-    # Apply cleaning
-    df['text'] = df['text'].apply(clean_text)
+    # Ensure column name
+    if 'text' not in df.columns:
+        # try common alternatives
+        for c in ['content', 'body']:
+            if c in df.columns:
+                df = df.rename(columns={c: 'text'})
+                break
+
+    # Apply cleaning (skip missing values)
+    df['text'] = df['text'].fillna('').astype(str).apply(lambda t: clean_text(t, use_stemmer=args.use_stemmer))
     
     after_samples = df['text'].head(3).copy()
     
-    print(f"   Preprocessed all {len(df)} samples")
+    print(f"   Preprocessed all {len(df)} samples (use_stemmer={args.use_stemmer})")
     
     print("\n── Before/After Samples ──\n")
     for i in range(3):

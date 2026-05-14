@@ -61,6 +61,32 @@ Build a balanced binary classification dataset to distinguish between AI-generat
 - [ ] Load `raw_data.csv`
 - [ ] Lowercase text
 - [ ] Remove URLs, punctuation, numbers
+Completed: implemented `scripts/01_preprocessing.py` which performs the full cleaning pipeline and writes `data/processed/clean_data.csv`.
+
+- **Steps implemented:**
+  - Load `data/processed/raw_data.csv` (auto-detects `text`/`content`/`body` column names)
+  - Lowercase
+  - Remove URLs and email addresses
+  - Remove punctuation and numbers (keeps letters and spaces)
+  - Tokenize with NLTK
+  - Remove NLTK English stopwords
+  - Lemmatize tokens (default) and optionally stem with Porter if `--use-stemmer` is passed
+  - Rejoin tokens and save to `data/processed/clean_data.csv`
+
+**Implementation notes:**
+
+- The script auto-downloads required NLTK data (`punkt`, `punkt_tab`, `stopwords`, `wordnet`, `omw-1.4`) on first run.
+- Lemmatization is the default because it preserves real words (better interpretability and model features); stemming is available as an opt-in flag (`--use-stemmer`) for cases where aggressive vocabulary reduction is desired.
+- The script provides a small before/after sample preview and prints dataset statistics (counts, average length, tokens/sample).
+
+**Usage examples:**
+
+```python
+python scripts/01_preprocessing.py
+python scripts/01_preprocessing.py --use-stemmer
+python scripts/01_preprocessing.py -i data/processed/raw_data.csv -o data/processed/clean_data.csv
+```
+
 - [ ] Remove stopwords (nltk)
 - [ ] Stem or lemmatize tokens
 - [ ] Save to `data/processed/clean_data.csv`
