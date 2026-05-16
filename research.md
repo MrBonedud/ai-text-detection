@@ -56,7 +56,7 @@ Build a balanced binary classification dataset to distinguish between AI-generat
 
 ## Day 1: Text Preprocessing (`01_preprocessing.py`)
 
-### Tasks
+### Day 1 Tasks
 
 - [ ] Load `raw_data.csv`
 - [ ] Lowercase text
@@ -94,7 +94,33 @@ python scripts/01_preprocessing.py -i data/processed/raw_data.csv -o data/proces
 
 ### Next Steps
 
-- [ ] Train/validation/test split
-- [ ] Feature extraction / embeddings
+- [x] Train/validation/test split
+- [x] Feature extraction / embeddings
 - [ ] Baseline model training
 - [ ] Performance evaluation
+
+---
+
+## Day 2: Feature Extraction (`02_features.py`)
+
+### Day 2 Tasks
+
+Completed: implemented `scripts/02_features.py` to build TF-IDF features from `data/processed/clean_data.csv`, using an 80/20 stratified split with `random_state=42`.
+
+- **Steps implemented:**
+  - Load `data/processed/clean_data.csv` (auto-detects `text`/`content`/`body` column names)
+  - Split the dataset with `train_test_split(test_size=0.2, stratify=y, random_state=42)`
+  - Fit a `TfidfVectorizer(max_features=5000, ngram_range=(1, 2))` on the training split only
+  - Transform both train and test text into sparse TF-IDF matrices
+  - Save matrices, labels, vectorizer, and feature names to `data/processed/tfidf_matrix.pkl`
+
+**Output:**
+
+- **File:** `data/processed/tfidf_matrix.pkl`
+- **Contents:** `X_train_tfidf`, `X_test_tfidf`, `y_train`, `y_test`, `vectorizer`, `feature_names`
+- **Observed shapes:** train `(1600, 5000)`, test `(400, 5000)`
+
+**Implementation notes:**
+
+- The vectorizer is fit only on the training fold to avoid leakage.
+- The artifact is saved with `joblib` so it can be reused directly for model training.
