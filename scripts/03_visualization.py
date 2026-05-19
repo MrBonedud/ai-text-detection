@@ -106,8 +106,8 @@ feature_names = payload["feature_names"]
 
 
 # Separate classes
-human_rows = X_train[y_train == 0]
-ai_rows = X_train[y_train == 1]
+human_rows = X_train[(y_train == 0).to_numpy()]
+ai_rows = X_train[(y_train == 1).to_numpy()]
 
 # Mean TF-IDF score per term
 human_means = human_rows.mean(axis=0).A1

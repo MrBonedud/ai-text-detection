@@ -11,9 +11,11 @@ import os
 
 import joblib
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+from models_utils import train_logistic_regression, train_svm, train_naive_bayes, load_features
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,40 +24,6 @@ PROJECT_DIR = os.path.dirname(BASE_DIR)
 DEFAULT_FEATURES = os.path.join(PROJECT_DIR, "data", "processed", "tfidf_matrix.pkl")
 
 DEFAULT_OUTPUT = os.path.join(PROJECT_DIR, "results", "metrics", "model_comparison.csv")
-
-
-def load_features(path: str):
-    if not os.path.exists(path):
-        raise FileNotFoundError(path)
-    return joblib.load(path)
-
-
-def train_logistic_regression(X_train, y_train):
-    print("   ├─ Training Logistic Regression")
-
-    model = LogisticRegression(
-        max_iter=1000,
-        random_state=42,
-        solver="lbfgs",
-        n_jobs=-1
-    )
-
-    model.fit(X_train, y_train)
-    return model
-
-
-def train_svm(X_train, y_train):
-    print("   ├─ Training SVM (LinearSVC)")
-
-    model = LinearSVC(
-        C=1.0,
-        max_iter=2000,
-        random_state=42,
-        dual=False
-    )
-
-    model.fit(X_train, y_train)
-    return model
 
 
 def calculate_metrics_both_sets(model, name, X_train, y_train, X_test, y_test):
@@ -119,6 +87,7 @@ def main():
 
     lr = train_logistic_regression(X_train, y_train)
     svm = train_svm(X_train, y_train)
+    nb = train_naive_bayes(X_train, y_train)
 
     print("\n── Evaluating ──")
 
@@ -126,6 +95,7 @@ def main():
 
     metrics += calculate_metrics_both_sets(lr, "Logistic Regression", X_train, y_train, X_test, y_test)
     metrics += calculate_metrics_both_sets(svm, "SVM (LinearSVC)", X_train, y_train, X_test, y_test)
+    metrics += calculate_metrics_both_sets(nb, "Naive Bayes", X_train, y_train, X_test, y_test)
 
     save(metrics, args.output)
 

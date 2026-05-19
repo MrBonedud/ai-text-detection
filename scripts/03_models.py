@@ -1,7 +1,7 @@
 """
 03_models.py
 ------------
-Train Logistic Regression + SVM model on TF-IDF features and generate confusion matrix.
+Train models and generate confusion matrices.
 """
 
 from __future__ import annotations
@@ -9,12 +9,11 @@ from __future__ import annotations
 import argparse
 import os
 
-import joblib
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
+from models_utils import train_logistic_regression, train_svm, train_naive_bayes, load_features
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,60 +26,8 @@ DEFAULT_OUTPUT = os.path.join(
 )
 
 
-def load_features(input_path: str) -> dict:
-    if not os.path.exists(input_path):
-        raise FileNotFoundError(f"Feature file not found: {input_path}")
-    return joblib.load(input_path)
-
-
-def train_logistic_regression(X_train, y_train):
-    print("── Training Logistic Regression ──")
-
-    model = LogisticRegression(
-        max_iter=1000,
-        random_state=42,
-        solver="lbfgs",
-        n_jobs=-1
-    )
-
-    model.fit(X_train, y_train)
-    print("   Model trained successfully")
-
-    return model
-
-
-def train_svm(X_train, y_train):
-    print("── Training SVM (LinearSVC) ──")
-
-    model = LinearSVC(
-        C=1.0,
-        max_iter=2000,
-        random_state=42,
-        dual=False
-    )
-
-    model.fit(X_train, y_train)
-    print("   Model trained successfully")
-
-    return model
-
-
-def evaluate_model(model, X_test, y_test):
-    print("\n── Evaluating Model ──")
-
-    y_pred = model.predict(X_test)
-
-    accuracy = accuracy_score(y_test, y_pred)
-    print(f"   Accuracy: {accuracy:.4f}")
-
-    print("\n── Classification Report ──")
-    print(classification_report(y_test, y_pred))
-
-    return y_pred
-
-
-def generate_confusion_matrix_plot(y_test, y_pred, output_path: str):
-    print("\n── Generating Confusion Matrix ──")
+def generate_confusion_matrix_plot(model_name, y_test, y_pred, output_path: str):
+    print(f"\n── Generating Confusion Matrix ({model_name}) ──")
 
     cm = confusion_matrix(y_test, y_pred)
 
@@ -96,7 +43,7 @@ def generate_confusion_matrix_plot(y_test, y_pred, output_path: str):
 
     plt.xlabel("Predicted")
     plt.ylabel("True")
-    plt.title("Confusion Matrix")
+    plt.title(f"Confusion Matrix - {model_name}")
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -109,7 +56,6 @@ def generate_confusion_matrix_plot(y_test, y_pred, output_path: str):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", default=DEFAULT_INPUT)
-    parser.add_argument("-o", "--output", default=DEFAULT_OUTPUT)
     args = parser.parse_args()
 
     print("── Loading features ──")
@@ -124,11 +70,25 @@ def main():
     print(f"Test shape : {X_test.shape}")
 
     # Logistic Regression
-    model = train_logistic_regression(X_train, y_train)
+    print("\n=== Logistic Regression ===")
+    lr_model = train_logistic_regression(X_train, y_train)
+    lr_pred = lr_model.predict(X_test)
+    lr_output = os.path.join(os.path.dirname(DEFAULT_OUTPUT), "lr_cm.png")
+    generate_confusion_matrix_plot("Logistic Regression", y_test, lr_pred, lr_output)
 
-    y_pred = evaluate_model(model, X_test, y_test)
+    # SVM
+    print("\n=== SVM (LinearSVC) ===")
+    svm_model = train_svm(X_train, y_train)
+    svm_pred = svm_model.predict(X_test)
+    svm_output = os.path.join(os.path.dirname(DEFAULT_OUTPUT), "svm_cm.png")
+    generate_confusion_matrix_plot("SVM (LinearSVC)", y_test, svm_pred, svm_output)
 
-    generate_confusion_matrix_plot(y_test, y_pred, args.output)
+    # Naive Bayes
+    print("\n=== Naive Bayes ===")
+    nb_model = train_naive_bayes(X_train, y_train)
+    nb_pred = nb_model.predict(X_test)
+    nb_output = os.path.join(os.path.dirname(DEFAULT_OUTPUT), "nb_cm.png")
+    generate_confusion_matrix_plot("Naive Bayes", y_test, nb_pred, nb_output)
 
     print("\n✓ Done")
 
