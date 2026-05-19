@@ -1,0 +1,5 @@
+Model,Set,Accuracy,Precision,Recall,F1
+Logistic Regression,Train,0.998125,0.9962640099626401,1.0,0.9981285090455396
+Logistic Regression,Test,0.985,0.9801980198019802,0.99,0.9850746268656716
+SVM (LinearSVC),Train,1.0,1.0,1.0,1.0
+SVM (LinearSVC),Test,0.995,1.0,0.99,0.9949748743718593
