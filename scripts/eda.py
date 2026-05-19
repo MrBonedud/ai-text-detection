@@ -24,7 +24,6 @@ plt.savefig("results/charts/class_distribution.png")
 plt.close()
 
 df['text_length'] = df[text_col].apply(lambda x: len(str(x).split()))
-
 df.groupby('label')['text_length'].mean().plot(kind='bar')
 plt.title("Average Text Length Per Class")
 plt.xlabel("Label (0=Human, 1=AI)")
